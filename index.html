@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuesta Peré – Miel Artesanal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  CONFIGURACIÓN — edita solo esta sección               ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<script>
+window.CP_CONFIG = {
+  // 1. Pega aquí tu objeto firebaseConfig desde Firebase Console
+  firebase: {
+    apiKey: "AIzaSyAe_soQe3Ew3yeysfBjiL_WQrMFZpA0Kj4",
+    authDomain: "cuesta-pere.firebaseapp.com",
+    projectId: "cuesta-pere",
+    storageBucket: "cuesta-pere.firebasestorage.app",
+    messagingSenderId: "107451593696",
+    appId: "1:107451593696:web:c10ba51623bfb7b90ef185",
+  },
+  // 2. Tu email — tendrá acceso completo de edición
+  adminEmail: "mielescuestapere@gmail.com",
+  // 3. EmailJS (emailjs.com → gratis hasta 200/mes)
+  emailjs: {
+    publicKey: "1QMUUTUEsigC0iLyP",
+    serviceId: "service_19e6lf8"
+    // Los template IDs ya están hardcodeados en el código
+  }
+};
+</script>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }                                                   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection,
+         query, orderBy, getDocs, updateDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signInWithPopup,
+         createUserWithEmailAndPassword, GoogleAuthProvider,
+         signOut, onAuthStateChanged, updateProfile }                      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const cfg = window.CP_CONFIG.firebase;
+const app  = initializeApp(cfg);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+window._db   = db;
+window._auth = auth;
+window._fs   = { doc, getDoc, setDoc, addDoc, collection, query, orderBy,
+                 getDocs, updateDoc, serverTimestamp, onSnapshot };
+window._authFns = {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+};
+window._fbReady = true;
+document.dispatchEvent(new Event('fbReady'));
+</script>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+<style>
+:root {
+  --gold:       #C9922A;
+  --gold-l:     #E8B84B;
+  --gold-pale:  #F5E6C4;
+  --dark:       #0D0D0D;
+  --d2:         #141414;
+  --d3:         #1C1C1C;
+  --d4:         #242424;
+  --d5:         #2C2C2C;
+  --text:       #F0EAD6;
+  --muted:      #8A8070;
+  --border:     rgba(201,146,42,0.2);
+  --border-s:   rgba(201,146,42,0.45);
+  --success-bg: rgba(46,125,50,0.12);
+  --success-c:  #81C784;
+  --danger-bg:  rgba(192,57,43,0.12);
+  --danger-c:   #E57373;
+  --warn-bg:    rgba(245,165,0,0.12);
+  --warn-c:     #FFB74D;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+
+/* ── HEADER ── */
+header{background:var(--d2);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:200}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
+.logo-text{font-family:'Cinzel',serif;font-size:19px;color:var(--gold);letter-spacing:.08em;font-weight:600}
+.header-right{display:flex;align-items:center;gap:10px}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:24px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s}
+.user-pill:hover{border-color:var(--gold)}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:12px;color:var(--dark);font-weight:700;flex-shrink:0}
+.user-name{font-size:14px;color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ── MAIN ── */
+main{max-width:960px;margin:0 auto;padding:2.5rem 1.5rem 5rem}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:3rem}
+.hero-title{font-family:'Cinzel',serif;font-size:clamp(26px,5vw,46px);color:var(--gold);font-weight:700;letter-spacing:.06em;line-height:1.15;margin-bottom:.6rem}
+.hero-sub{color:var(--muted);font-style:italic;font-size:19px}
+
+/* ── PRODUCT GRID ── */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.75rem}
+.product-card{background:var(--d3);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .3s,transform .25s;position:relative}
+.product-card:hover{border-color:var(--gold);transform:translateY(-3px)}
+.product-card.inactive{opacity:.5}
+
+/* product image area */
+.prod-img-wrap{position:relative;width:100%;height:220px;overflow:hidden;cursor:pointer}
+.prod-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+.prod-img-wrap:hover img{transform:scale(1.03)}
+.prod-img-placeholder{width:100%;height:220px;display:flex;align-items:center;justify-content:center;font-size:80px}
+.edit-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;cursor:pointer}
+.prod-img-wrap:hover .edit-img-overlay{opacity:1}
+.edit-img-btn{background:var(--gold);color:var(--dark);border:none;border-radius:4px;padding:8px 18px;font-family:'Cinzel',serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.05em}
+
+.prod-body{padding:1.25rem}
+.prod-name{font-family:'Cinzel',serif;font-size:21px;color:var(--gold-l);margin-bottom:.35rem}
+.prod-desc{color:var(--muted);font-size:15px;font-style:italic;margin-bottom:1rem;min-height:42px}
+.prod-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.75rem}
+.prod-price{font-family:'Cinzel',serif;font-size:24px;color:var(--gold)}
+
+/* stock badges */
+.badge{font-size:12px;padding:3px 11px;border-radius:20px;font-family:'Cinzel',serif;letter-spacing:.04em}
+.b-ok  {background:rgba(46,125,50,.18);color:#81C784;border:1px solid rgba(46,125,50,.35)}
+.b-low {background:rgba(245,165,0,.15);color:#FFB74D;border:1px solid rgba(245,165,0,.35)}
+.b-zero{background:var(--danger-bg);color:var(--danger-c);border:1px solid rgba(192,57,43,.35)}
+
+.oos-msg{text-align:center;color:var(--danger-c);font-style:italic;font-size:14px;padding:8px;border:1px solid rgba(192,57,43,.25);border-radius:4px;background:var(--danger-bg)}
+
+/* admin inline edit */
+.edit-field{display:none;margin-bottom:.6rem}
+.edit-field.show{display:block}
+.edit-field input,.edit-field textarea{width:100%;background:var(--d4);border:1px solid var(--border-s);border-radius:4px;color:var(--text);font-family:'Crimson Pro',serif;font-size:16px;padding:7px 10px;outline:none;transition:border-color .2s}
+.edit-field input:focus,.edit-field textarea:focus{border-color:var(--gold)}
+.edit-actions{display:none;gap:8px;margin-top:.5rem}
+.edit-actions.show{display:flex}
+
+/* ── BUTTONS ── */
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--dark);border:none;padding:11px 22px;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:.06em;transition:opacity .2s,transform .15s;width:100%}
+.btn-gold:hover{opacity:.88;transform:translateY(-1px)}
+.btn-gold:active{transform:scale(.98)}
+.btn-gold:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;border:1px solid var(--border-s);color:var(--gold);padding:8px 16px;border-radius:4px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;transition:all .2s}
+.btn-outline:hover{background:rgba(201,146,42,.1)}
+.btn-sm{background:var(--d4);border:1px solid var(--border-s);color:var(--gold);padding:6px 14px;border-radius:4px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;letter-spacing:.04em;transition:all .2s}
+.btn-sm:hover{background:rgba(201,146,42,.15)}
+.btn-danger{background:transparent;border:1px solid rgba(192,57,43,.4);color:var(--danger-c);padding:6px 14px;border-radius:4px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:4px;cursor:pointer;font-family:'Crimson Pro',serif;font-size:15px;transition:all .2s}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── CARD ── */
+.card{background:var(--d3);border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:560px;margin:0 auto}
+.card-wide{max-width:760px}
+.card-title{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);margin-bottom:1.5rem;letter-spacing:.05em}
+.section-label{font-family:'Cinzel',serif;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+
+/* ── FORMS ── */
+.fg{margin-bottom:1.1rem}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.07em;font-family:'Cinzel',serif}
+input,textarea,select{width:100%;background:var(--d4);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Crimson Pro',serif;font-size:17px;padding:10px 13px;transition:border-color .2s;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+select option{background:var(--d4)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.divider{border:none;border-top:1px solid var(--border);margin:1.4rem 0}
+.err{color:var(--danger-c);font-size:13px;margin-top:3px}
+.link-btn{background:none;border:none;color:var(--gold);cursor:pointer;font-family:'Crimson Pro',serif;font-size:16px;text-decoration:underline;padding:0}
+
+/* ── INFO / SUCCESS / WARN BOXES ── */
+.box-info   {background:rgba(201,146,42,.08);border:1px solid var(--border);border-radius:5px;padding:.85rem 1rem;font-size:15px;color:var(--gold-pale);margin-bottom:1rem}
+.box-success{background:var(--success-bg);border:1px solid rgba(46,125,50,.4);border-radius:5px;padding:1.5rem;text-align:center;color:var(--success-c)}
+.box-success .big{font-size:52px;margin-bottom:.4rem}
+.box-success h3{font-family:'Cinzel',serif;color:var(--success-c);margin-bottom:.4rem}
+.box-warn   {background:var(--warn-bg);border:1px solid rgba(245,165,0,.35);border-radius:5px;padding:.85rem 1rem;font-size:14px;color:var(--warn-c);margin-bottom:1rem}
+
+/* ── ORDER SUMMARY ── */
+.order-sum{background:var(--d4);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:1.3rem}
+.order-line{display:flex;justify-content:space-between;align-items:center;padding:3px 0}
+.order-total{border-top:1px solid var(--border);margin-top:7px;padding-top:7px;font-family:'Cinzel',serif;color:var(--gold-l);font-size:19px}
+
+/* ── QTY ── */
+.qty-wrap{display:flex;align-items:center;gap:12px;margin-top:1rem;margin-bottom:1.3rem}
+.qty-btn{width:36px;height:36px;background:var(--d4);border:1px solid var(--border);color:var(--gold);font-size:20px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:border-color .2s;user-select:none}
+.qty-btn:hover{border-color:var(--gold)}
+.qty-n{font-family:'Cinzel',serif;font-size:20px;min-width:30px;text-align:center}
+
+/* ── SAVED ADDRESS (Amazon-style) ── */
+.address-card{background:var(--d4);border:1px solid var(--border-s);border-radius:7px;padding:1rem 1.2rem;position:relative;margin-bottom:1rem}
+.address-card.selected{border-color:var(--gold)}
+.address-name{font-family:'Cinzel',serif;font-size:15px;color:var(--gold-l);margin-bottom:.25rem}
+.address-lines{font-size:15px;color:var(--text);line-height:1.55}
+.address-edit-btn{position:absolute;top:10px;right:10px;font-size:13px;color:var(--gold);cursor:pointer;background:none;border:none;font-family:'Cinzel',serif;text-decoration:underline}
+
+/* ── PROFILE (Mi cuenta) ── */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.profile-section{background:var(--d4);border:1px solid var(--border);border-radius:7px;padding:1.1rem}
+.profile-section h3{font-family:'Cinzel',serif;font-size:15px;color:var(--gold-l);margin-bottom:.85rem}
+
+/* ── PEDIDOS TABLE ── */
+.orders-table{width:100%;border-collapse:collapse;font-size:15px}
+.orders-table th{font-family:'Cinzel',serif;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
+.orders-table td{padding:10px 12px;border-bottom:1px solid rgba(201,146,42,.08)}
+.orders-table tr:hover td{background:rgba(201,146,42,.035)}
+.status-pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:12px;font-family:'Cinzel',serif}
+.s-pendiente{background:var(--warn-bg);color:var(--warn-c)}
+.s-enviado  {background:var(--success-bg);color:var(--success-c)}
+
+/* ── AUTH SOCIAL BUTTON ── */
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;border:1px solid var(--border-s);border-radius:5px;background:var(--d4);color:var(--text);cursor:pointer;font-family:'Crimson Pro',serif;font-size:16px;transition:border-color .2s;margin-bottom:1rem}
+.btn-google:hover{border-color:var(--gold)}
+.g-icon{width:18px;height:18px;flex-shrink:0}
+
+/* ── OR divider ── */
+.or-row{display:flex;align-items:center;gap:.75rem;margin:.85rem 0;color:var(--muted);font-size:14px}
+.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── IMAGE UPLOAD area ── */
+.img-drop{border:2px dashed var(--border-s);border-radius:6px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:.75rem}
+.img-drop:hover{border-color:var(--gold)}
+.img-drop input[type=file]{display:none}
+.img-preview{max-width:100%;max-height:200px;border-radius:6px;margin-top:.75rem;display:none}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--d3);border:1px solid var(--border-s);color:var(--text);padding:12px 20px;border-radius:7px;font-size:15px;z-index:999;transform:translateY(110px);opacity:0;transition:all .3s;max-width:300px;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:rgba(46,125,50,.6);color:var(--success-c)}
+.toast.err{border-color:rgba(192,57,43,.6);color:var(--danger-c)}
+
+/* ── SPINNER ── */
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(201,146,42,.3);border-top-color:var(--gold);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── TOGGLE ── */
+.toggle{position:relative;width:42px;height:24px;display:inline-block}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--d5);border-radius:24px;border:1px solid var(--border);cursor:pointer;transition:.3s}
+.tslider::before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.3s}
+.toggle input:checked+.tslider{background:rgba(201,146,42,.25);border-color:var(--gold)}
+.toggle input:checked+.tslider::before{transform:translateX(18px);background:var(--gold)}
+
+/* ── MODAL overlay ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--d3);border:1px solid var(--border-s);border-radius:10px;padding:1.75rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);margin-bottom:1.25rem}
+.modal-close{float:right;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--text)}
+
+/* ── NEW PRODUCT card ── */
+.add-product-card{background:var(--d3);border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;min-height:300px;cursor:pointer;transition:border-color .3s,background .3s}
+.add-product-card:hover{border-color:var(--gold);background:rgba(201,146,42,.04)}
+.add-product-inner{text-align:center;color:var(--muted)}
+.add-product-plus{font-size:48px;color:var(--border-s);margin-bottom:.5rem}
+.add-product-text{font-family:'Cinzel',serif;font-size:15px;color:var(--muted)}
+
+/* ── ADMIN EDIT BANNER ── */
+.admin-banner{background:rgba(201,146,42,.1);border-bottom:1px solid var(--border-s);padding:8px 2rem;font-size:14px;color:var(--gold-pale);text-align:center;display:none}
+.admin-banner.show{display:block}
+
+@media(max-width:640px){
+  .form-row{grid-template-columns:1fr}
+  .profile-grid{grid-template-columns:1fr}
+  main{padding:1.5rem 1rem 3rem}
+  header{padding:0 1rem}
+  .logo-text{font-size:15px}
+  .orders-table{font-size:13px}
+  .orders-table th,.orders-table td{padding:7px 8px}
+}
+</style>
+</head>
+<body>
+
+<!-- ADMIN BANNER -->
+<div class="admin-banner" id="admin-banner">
+  ✏️ Modo edición activo — haz clic en cualquier producto para editar precio, descripción o imagen
+</div>
+
+<header>
+  <div class="logo" onclick="showView('shop')">
+    <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+      <polygon points="18,3 33,12 33,24 18,33 3,24 3,12" fill="none" stroke="#C9922A" stroke-width="1.5"/>
+      <polygon points="18,8 28,14 28,22 18,28 8,22 8,14" fill="rgba(201,146,42,0.15)" stroke="#C9922A" stroke-width="1"/>
+      <circle cx="18" cy="18" r="4" fill="#C9922A"/>
+    </svg>
+    <span class="logo-text">Cuesta Peré</span>
+  </div>
+  <div class="header-right">
+    <div id="user-pill" class="user-pill" style="display:none" onclick="showView('profile')">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="user-name" id="user-name-h">Mi cuenta</span>
+    </div>
+    <button class="btn-ghost" id="btn-pedidos" style="display:none" onclick="showView('my-orders')">Mis pedidos</button>
+    <button class="btn-ghost" id="btn-logout" style="display:none" onclick="doLogout()">Salir</button>
+    <button class="btn-ghost" id="btn-login-h" onclick="showView('auth')">Entrar</button>
+  </div>
+</header>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL (editar producto / añadir producto) -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 class="modal-title" id="modal-title">Editar producto</h3>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<main>
+
+<!-- ══════════════ SHOP ══════════════ -->
+<div class="view active" id="view-shop">
+  <div class="hero">
+    <h1 class="hero-title">Miel Artesanal</h1>
+    <p class="hero-sub">De nuestras colmenas a tu mesa — directamente</p>
+  </div>
+  <div class="products-grid" id="products-grid"></div>
+</div>
+
+<!-- ══════════════ AUTH ══════════════ -->
+<div class="view" id="view-auth">
+  <div class="card">
+    <h2 class="card-title" id="auth-title">Accede a tu cuenta</h2>
+
+    <!-- Google -->
+    <button class="btn-google" onclick="signInGoogle()">
+      <svg class="g-icon" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+      Continuar con Google
+    </button>
+
+    <div class="or-row">o con email</div>
+
+    <div class="fg">
+      <label>Email</label>
+      <input type="email" id="auth-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+    <div class="fg" id="auth-name-row" style="display:none">
+      <label>Nombre completo</label>
+      <input type="text" id="auth-name" placeholder="Juan García">
+    </div>
+    <div class="fg">
+      <label>Contraseña</label>
+      <input type="password" id="auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+    <span class="err" id="err-auth"></span>
+    <button class="btn-gold" onclick="doAuth()" style="margin-top:.5rem" id="btn-do-auth">Entrar →</button>
+    <p style="text-align:center;margin-top:.9rem;font-size:15px;color:var(--muted)">
+      <button class="link-btn" id="auth-toggle-btn" onclick="toggleAuthMode()">¿Primera vez? Crear cuenta</button>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════ ORDER FLOW ══════════════ -->
+<div class="view" id="view-order">
+  <div class="card">
+    <h2 class="card-title">Confirmar reserva</h2>
+    <div class="order-sum" id="order-sum"></div>
+
+    <div class="qty-wrap">
+      <span style="font-size:15px;color:var(--muted)">Cantidad:</span>
+      <div class="qty-btn" onclick="changeQty(-1)">−</div>
+      <span class="qty-n" id="qty-n">1</span>
+      <div class="qty-btn" onclick="changeQty(1)">+</div>
+      <span style="font-size:13px;color:var(--muted)" id="qty-max-msg"></span>
+    </div>
+
+    <hr class="divider">
+    <p class="section-label">Dirección de entrega</p>
+    <div id="order-address-area"></div>
+
+    <div class="box-info">
+      <strong style="font-family:'Cinzel',serif;font-size:14px">Reserva sin pago online</strong><br>
+      Pagarás en efectivo o transferencia al recibir tu pedido.
+    </div>
+
+    <div class="fg">
+      <label>Nota para el pedido (opcional)</label>
+      <textarea id="order-note" rows="2" placeholder="Hora preferida de entrega, indicaciones..."></textarea>
+    </div>
+
+    <button class="btn-gold" id="btn-confirm" onclick="submitOrder()">Confirmar reserva</button>
+    <p style="text-align:center;margin-top:.7rem;font-size:14px">
+      <button class="link-btn" onclick="showView('shop')">← Volver</button>
+    </p>
+  </div>
+</div>
+
+<!-- Address form (dentro del flujo de pedido) -->
+<div class="view" id="view-addr-form">
+  <div class="card">
+    <h2 class="card-title" id="addr-form-title">Nueva dirección</h2>
+    <div class="form-row">
+      <div class="fg"><label>Nombre</label><input type="text" id="af-nombre" placeholder="Juan"></div>
+      <div class="fg"><label>Apellidos</label><input type="text" id="af-apellidos" placeholder="García López"></div>
+    </div>
+    <div class="fg"><label>Teléfono</label><input type="tel" id="af-tel" placeholder="+34 600 000 000"></div>
+    <div class="fg"><label>Calle y número</label><input type="text" id="af-calle" placeholder="Calle Mayor 12, 3ºA"></div>
+    <div class="form-row">
+      <div class="fg"><label>Código postal</label><input type="text" id="af-cp" placeholder="28001"></div>
+      <div class="fg"><label>Ciudad</label><input type="text" id="af-ciudad" placeholder="Madrid"></div>
+    </div>
+    <div class="fg"><label>Provincia</label><input type="text" id="af-prov" placeholder="Madrid"></div>
+    <span class="err" id="err-addr"></span>
+    <button class="btn-gold" onclick="saveAddress()">Guardar dirección</button>
+    <p style="text-align:center;margin-top:.75rem"><button class="link-btn" onclick="backFromAddrForm()">← Volver</button></p>
+  </div>
+</div>
+
+<!-- ══════════════ SUCCESS ══════════════ -->
+<div class="view" id="view-success">
+  <div class="card">
+    <div class="box-success">
+      <div class="big">🍯</div>
+      <h3>¡Reserva confirmada!</h3>
+      <p id="success-msg">Tu pedido ha sido registrado.</p>
+    </div>
+    <button class="btn-gold" style="margin-top:1.5rem" onclick="showView('shop')">Seguir comprando</button>
+    <p style="text-align:center;margin-top:.6rem"><button class="link-btn" onclick="showView('my-orders')">Ver mis pedidos</button></p>
+  </div>
+</div>
+
+<!-- ══════════════ PROFILE ══════════════ -->
+<div class="view" id="view-profile">
+  <div class="card card-wide">
+    <h2 class="card-title">Mi cuenta</h2>
+    <div class="profile-grid" id="profile-grid"></div>
+    <hr class="divider">
+    <p class="section-label">Mis direcciones</p>
+    <div id="profile-addresses"></div>
+    <button class="btn-outline" style="margin-top:.75rem" onclick="openAddrForm(null,'profile')">+ Añadir dirección</button>
+  </div>
+</div>
+
+<!-- ══════════════ MY ORDERS ══════════════ -->
+<div class="view" id="view-my-orders">
+  <div class="card card-wide">
+    <h2 class="card-title">Mis pedidos</h2>
+    <div id="my-orders-body"><p style="color:var(--muted);font-style:italic">Cargando...</p></div>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN ORDERS ══════════════ -->
+<div class="view" id="view-admin-orders">
+  <div class="card card-wide">
+    <h2 class="card-title">Todos los pedidos</h2>
+    <div id="admin-orders-body"><p style="color:var(--muted);font-style:italic">Cargando...</p></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let currentUser    = null;  // Firebase Auth user
+let clientProfile  = null;  // Firestore client doc
+let isAdmin        = false;
+let currentOrder   = null;  // { productId, productName, price }
+let orderQty       = 1;
+let pendingAddrFor = null;  // 'order' | 'profile'
+let addrEditIndex  = null;
+let authMode       = 'login'; // 'login' | 'register'
+let products       = {};
+let fbReady        = false;
+
+// ═══════════════════════════════════════════════
+// FIREBASE INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('fbReady', () => {
+  fbReady = true;
+  emailjs.init(window.CP_CONFIG.emailjs.publicKey);
+
+  window._authFns.onAuthStateChanged(window._auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      isAdmin = user.email === window.CP_CONFIG.adminEmail;
+      await loadClientProfile(user);
+      updateHeader();
+      document.getElementById('admin-banner').classList.toggle('show', isAdmin);
+
+      // If admin, show extra nav
+      if (isAdmin) {
+        let ob = document.getElementById('btn-admin-orders');
+        if (!ob) {
+          ob = document.createElement('button');
+          ob.id = 'btn-admin-orders';
+          ob.className = 'btn-ghost';
+          ob.textContent = 'Pedidos admin';
+          ob.onclick = () => { loadAdminOrders(); showView('admin-orders'); };
+          document.querySelector('.header-right').insertBefore(ob, document.getElementById('btn-login-h'));
+        }
+      }
+    } else {
+      currentUser = null; clientProfile = null; isAdmin = false;
+      updateHeader();
+      document.getElementById('admin-banner').classList.remove('show');
+      const ob = document.getElementById('btn-admin-orders');
+      if (ob) ob.remove();
+    }
+    await loadProducts();
+  });
+});
+
+// ═══════════════════════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════════════════════
+async function loadProducts() {
+  if (!fbReady) { renderProducts(); return; }
+  const { collection, getDocs } = window._fs;
+  try {
+    const snap = await getDocs(collection(window._db, 'products'));
+    if (snap.empty) await seedProducts();
+    else snap.forEach(d => { products[d.id] = { id: d.id, ...d.data() }; });
+  } catch(e) { console.error(e); }
+  renderProducts();
+}
+
+async function seedProducts() {
+  const { doc, setDoc } = window._fs;
+  const seeds = {
+    clara: { name: 'Miel Clara', desc: 'Floral y delicada, de flores silvestres de primavera. Textura suave y aroma sutil.', price: 12, stock: 20, active: true, emoji: '🍯', imageUrl: '' },
+    oscura: { name: 'Miel Oscura', desc: 'Intensa y aromática, de monte bajo y tomillo. Sabor robusto con notas balsámicas.', price: 14, stock: 5, active: true, emoji: '🫙', imageUrl: '' }
+  };
+  for (const [id, p] of Object.entries(seeds)) {
+    await setDoc(doc(window._db, 'products', id), p);
+    products[id] = { id, ...p };
+  }
+}
+
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = '';
+  const list = Object.values(products).filter(p => isAdmin || p.active);
+
+  list.forEach(p => {
+    const stk = p.stock;
+    const bClass = stk === 0 ? 'b-zero' : stk <= 3 ? 'b-low' : 'b-ok';
+    const bLabel = stk === 0 ? 'Sin stock' : stk <= 3 ? `Quedan ${stk}` : 'Disponible';
+
+    const card = document.createElement('div');
+    card.className = 'product-card' + (!p.active && isAdmin ? ' inactive' : '');
+
+    const imgArea = p.imageUrl
+      ? `<img src="${p.imageUrl}" alt="${p.name}">`
+      : `<div class="prod-img-placeholder" style="background:${p.emoji==='🍯'?'#F5C84222':'#8B451322'}">${p.emoji}</div>`;
+
+    const editOverlay = isAdmin ? `<div class="edit-img-overlay"><button class="edit-img-btn" onclick="openEditModal('${p.id}');event.stopPropagation()">Editar producto</button></div>` : '';
+
+    const actionArea = p.stock === 0
+      ? `<div class="oos-msg">Agotado temporalmente — vuelve pronto</div>`
+      : (isAdmin ? '' : `<button class="btn-gold" onclick="startOrder('${p.id}')">Reservar ahora</button>`);
+
+    const adminToggle = isAdmin ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-top:.6rem">
+        <label class="toggle"><input type="checkbox" ${p.active?'checked':''} onchange="toggleActive('${p.id}',this.checked)"><span class="tslider"></span></label>
+        <span style="font-size:13px;color:var(--muted)">${p.active?'Activo':'Inactivo'}</span>
+      </div>` : '';
+
+    card.innerHTML = `
+      <div class="prod-img-wrap">
+        ${imgArea}
+        ${editOverlay}
+      </div>
+      <div class="prod-body">
+        <h3 class="prod-name">${p.name}</h3>
+        <p class="prod-desc">${p.desc}</p>
+        <div class="prod-footer">
+          <span class="prod-price">${Number(p.price).toFixed(2)} €</span>
+          <span class="badge ${bClass}">${bLabel}</span>
+        </div>
+        ${actionArea}
+        ${adminToggle}
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  // "Añadir producto" card for admin
+  if (isAdmin) {
+    const add = document.createElement('div');
+    add.className = 'add-product-card';
+    add.onclick = () => openAddProductModal();
+    add.innerHTML = `<div class="add-product-inner"><div class="add-product-plus">+</div><span class="add-product-text">Añadir producto</span></div>`;
+    grid.appendChild(add);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN — EDIT / ADD PRODUCT MODAL
+// ═══════════════════════════════════════════════
+function openEditModal(pid) {
+  if (!isAdmin) return;
+  const p = products[pid];
+  document.getElementById('modal-title').textContent = 'Editar · ' + p.name;
+  document.getElementById('modal-body').innerHTML = buildProductForm(p);
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function openAddProductModal() {
+  document.getElementById('modal-title').textContent = 'Nuevo producto';
+  document.getElementById('modal-body').innerHTML = buildProductForm(null);
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function buildProductForm(p) {
+  const isNew = !p;
+  const id = p ? p.id : '';
+  return `
+    <div class="fg"><label>Nombre</label><input type="text" id="mf-name" value="${p?.name||''}"></div>
+    <div class="fg"><label>Descripción</label><textarea id="mf-desc" rows="3">${p?.desc||''}</textarea></div>
+    <div class="form-row">
+      <div class="fg"><label>Precio (€)</label><input type="number" id="mf-price" value="${p?.price||''}" step="0.5" min="0"></div>
+      <div class="fg"><label>Stock</label><input type="number" id="mf-stock" value="${p?.stock??0}" min="0" step="1"></div>
+    </div>
+    <div class="fg"><label>Emoji (si no hay foto)</label><input type="text" id="mf-emoji" value="${p?.emoji||'🍯'}" style="width:80px"></div>
+    <div class="fg">
+      <label>Imagen del producto</label>
+      <div class="img-drop" onclick="document.getElementById('mf-file').click()" id="mf-drop">
+        <input type="file" id="mf-file" accept="image/*" onchange="previewImg(this)">
+        <p style="color:var(--muted);font-size:14px">Clic o arrastra una imagen aquí<br><span style="font-size:12px">JPG, PNG, WebP — máx 2 MB</span></p>
+        <img id="mf-preview" class="img-preview" ${p?.imageUrl ? `src="${p.imageUrl}" style="display:block"` : ''}>
+      </div>
+      ${p?.imageUrl ? `<p style="font-size:12px;color:var(--muted)">URL actual guardada en Firebase Storage</p>` : ''}
+    </div>
+    <span class="err" id="err-mf"></span>
+    <div style="display:flex;gap:.75rem;margin-top:.25rem">
+      <button class="btn-gold" style="flex:1" onclick="${isNew?'saveNewProduct()':'saveProduct(\''+id+'\')'}">
+        ${isNew ? 'Crear producto' : 'Guardar cambios'}
+      </button>
+      ${!isNew ? `<button class="btn-danger" onclick="deleteProduct('${id}')">Eliminar</button>` : ''}
+    </div>
+  `;
+}
+
+function previewImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2*1024*1024) { toast('Imagen demasiado grande (máx 2 MB)', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('mf-preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveProduct(pid) {
+  const name  = document.getElementById('mf-name').value.trim();
+  const desc  = document.getElementById('mf-desc').value.trim();
+  const price = parseFloat(document.getElementById('mf-price').value);
+  const stock = parseInt(document.getElementById('mf-stock').value);
+  const emoji = document.getElementById('mf-emoji').value.trim() || '🍯';
+  if (!name || isNaN(price) || isNaN(stock)) { document.getElementById('err-mf').textContent = 'Rellena todos los campos'; return; }
+
+  // Check if new image
+  let imageUrl = products[pid]?.imageUrl || '';
+  const file = document.getElementById('mf-file').files[0];
+  if (file) {
+    imageUrl = await uploadImageAsBase64(file); // store as data URL in Firestore (simple for small scale)
+  }
+
+  const data = { name, desc, price, stock, emoji, imageUrl, active: products[pid]?.active ?? true };
+  if (fbReady) {
+    const { doc, updateDoc } = window._fs;
+    await updateDoc(doc(window._db, 'products', pid), data);
+  }
+  products[pid] = { id: pid, ...data };
+  closeModal();
+  renderProducts();
+  toast('Producto actualizado', 'ok');
+}
+
+async function saveNewProduct() {
+  const name  = document.getElementById('mf-name').value.trim();
+  const desc  = document.getElementById('mf-desc').value.trim();
+  const price = parseFloat(document.getElementById('mf-price').value);
+  const stock = parseInt(document.getElementById('mf-stock').value);
+  const emoji = document.getElementById('mf-emoji').value.trim() || '🍯';
+  if (!name || isNaN(price) || isNaN(stock)) { document.getElementById('err-mf').textContent = 'Rellena nombre, precio y stock'; return; }
+
+  let imageUrl = '';
+  const file = document.getElementById('mf-file').files[0];
+  if (file) imageUrl = await uploadImageAsBase64(file);
+
+  const pid = name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') + '-' + Date.now();
+  const data = { name, desc, price, stock, emoji, imageUrl, active: true };
+
+  if (fbReady) {
+    const { doc, setDoc } = window._fs;
+    await setDoc(doc(window._db, 'products', pid), data);
+  }
+  products[pid] = { id: pid, ...data };
+  closeModal();
+  renderProducts();
+  toast('Producto creado', 'ok');
+}
+
+async function deleteProduct(pid) {
+  if (!confirm(`¿Eliminar "${products[pid].name}"? Esta acción no se puede deshacer.`)) return;
+  if (fbReady) {
+    // Firestore delete
+    const { doc } = window._fs;
+    const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    await deleteDoc(doc(window._db, 'products', pid));
+  }
+  delete products[pid];
+  closeModal();
+  renderProducts();
+  toast('Producto eliminado', 'ok');
+}
+
+async function toggleActive(pid, val) {
+  products[pid].active = val;
+  if (fbReady) {
+    const { doc, updateDoc } = window._fs;
+    await updateDoc(doc(window._db, 'products', pid), { active: val });
+  }
+  renderProducts();
+}
+
+// Store image as base64 in Firestore (avoids needing Firebase Storage)
+function uploadImageAsBase64(file) {
+  return new Promise((res) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+async function signInGoogle() {
+  if (!fbReady) { toast('Firebase no configurado', 'err'); return; }
+  try {
+    const provider = new window._authFns.GoogleAuthProvider();
+    await window._authFns.signInWithPopup(window._auth, provider);
+    showView('shop');
+  } catch(e) { toast('Error al entrar con Google: ' + e.message, 'err'); }
+}
+
+async function doAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const err   = document.getElementById('err-auth');
+  err.textContent = '';
+
+  if (!email || !pass) { err.textContent = 'Rellena email y contraseña'; return; }
+  if (!fbReady) { toast('Firebase no configurado aún', 'err'); return; }
+
+  const btn = document.getElementById('btn-do-auth');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Cargando...';
+
+  try {
+    if (authMode === 'login') {
+      await window._authFns.signInWithEmailAndPassword(window._auth, email, pass);
+    } else {
+      const name = document.getElementById('auth-name').value.trim();
+      if (!name) { err.textContent = 'Escribe tu nombre'; btn.disabled=false; btn.textContent='Crear cuenta →'; return; }
+      const cred = await window._authFns.createUserWithEmailAndPassword(window._auth, email, pass);
+      await window._authFns.updateProfile(cred.user, { displayName: name });
+    }
+    showView('shop');
+  } catch(e) {
+    const msgs = { 'auth/user-not-found':'Email no encontrado', 'auth/wrong-password':'Contraseña incorrecta', 'auth/email-already-in-use':'Ya existe una cuenta con ese email', 'auth/weak-password':'Contraseña demasiado corta (mín. 6 caracteres)' };
+    err.textContent = msgs[e.code] || e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Entrar →' : 'Crear cuenta →';
+  }
+}
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  const isReg = authMode === 'register';
+  document.getElementById('auth-title').textContent = isReg ? 'Crear cuenta' : 'Accede a tu cuenta';
+  document.getElementById('auth-name-row').style.display = isReg ? 'block' : 'none';
+  document.getElementById('btn-do-auth').textContent = isReg ? 'Crear cuenta →' : 'Entrar →';
+  document.getElementById('auth-toggle-btn').textContent = isReg ? '¿Ya tienes cuenta? Entrar' : '¿Primera vez? Crear cuenta';
+  document.getElementById('err-auth').textContent = '';
+}
+
+async function doLogout() {
+  if (fbReady) await window._authFns.signOut(window._auth);
+  currentUser = null; clientProfile = null; isAdmin = false;
+  updateHeader();
+  showView('shop');
+}
+
+// ═══════════════════════════════════════════════
+// CLIENT PROFILE (addresses etc.)
+// ═══════════════════════════════════════════════
+async function loadClientProfile(user) {
+  if (!fbReady) return;
+  const { doc, getDoc, setDoc, serverTimestamp } = window._fs;
+  const ref = doc(window._db, 'clients', user.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    clientProfile = snap.data();
+  } else {
+    // Create minimal profile on first login
+    clientProfile = { email: user.email, displayName: user.displayName||'', addresses: [], createdAt: serverTimestamp() };
+    await setDoc(ref, clientProfile);
+  }
+}
+
+async function saveClientProfile() {
+  if (!currentUser || !fbReady) return;
+  const { doc, updateDoc } = window._fs;
+  await updateDoc(doc(window._db, 'clients', currentUser.uid), clientProfile);
+}
+
+function updateHeader() {
+  const loggedIn = !!currentUser;
+  document.getElementById('user-pill').style.display   = loggedIn ? 'flex' : 'none';
+  document.getElementById('btn-pedidos').style.display = loggedIn ? 'inline-block' : 'none';
+  document.getElementById('btn-logout').style.display  = loggedIn ? 'inline-block' : 'none';
+  document.getElementById('btn-login-h').style.display = loggedIn ? 'none' : 'inline-block';
+
+  if (currentUser) {
+    const initials = (currentUser.displayName||currentUser.email||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('user-name-h').textContent = currentUser.displayName || currentUser.email;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ORDER FLOW
+// ═══════════════════════════════════════════════
+function startOrder(pid) {
+  if (!currentUser) { pendingOrderPid = pid; showView('auth'); return; }
+  const p = products[pid];
+  currentOrder = { productId: pid, productName: p.name, price: p.price };
+  orderQty = 1;
+  renderOrderView();
+  showView('order');
+}
+
+let pendingOrderPid = null;
+
+function renderOrderView() {
+  const p = products[currentOrder.productId];
+  updateOrderSummary();
+  document.getElementById('qty-max-msg').textContent = `máx. ${p.stock}`;
+  renderOrderAddressArea();
+}
+
+function updateOrderSummary() {
+  const p = products[currentOrder.productId];
+  const total = (p.price * orderQty).toFixed(2);
+  document.getElementById('order-sum').innerHTML = `
+    <p class="section-label" style="margin-bottom:.5rem">Resumen</p>
+    <div class="order-line"><span>${p.name}</span><span style="color:var(--muted)">${Number(p.price).toFixed(2)} € × ${orderQty}</span></div>
+    <div class="order-line order-total"><span>Total</span><span>${total} €</span></div>`;
+}
+
+function changeQty(d) {
+  const max = products[currentOrder.productId].stock;
+  orderQty = Math.max(1, Math.min(max, orderQty + d));
+  document.getElementById('qty-n').textContent = orderQty;
+  updateOrderSummary();
+}
+
+function renderOrderAddressArea() {
+  const addrs = clientProfile?.addresses || [];
+  const area = document.getElementById('order-address-area');
+  if (addrs.length === 0) {
+    area.innerHTML = `<div class="box-warn">No tienes ninguna dirección guardada.</div>
+      <button class="btn-outline" onclick="openAddrForm(null,'order')">+ Añadir dirección de entrega</button>`;
+    return;
+  }
+  let html = '';
+  addrs.forEach((a, i) => {
+    html += `<div class="address-card${i===0?' selected':''}">
+      <div class="address-name">${a.nombre} ${a.apellidos}</div>
+      <div class="address-lines">${a.calle}<br>${a.cp} ${a.ciudad}, ${a.provincia}<br>📞 ${a.telefono}</div>
+      <button class="address-edit-btn" onclick="openAddrForm(${i},'order')">Editar</button>
+    </div>`;
+  });
+  html += `<button class="btn-outline" style="margin-bottom:1rem" onclick="openAddrForm(null,'order')">+ Otra dirección</button>`;
+  area.innerHTML = html;
+}
+
+function openAddrForm(index, from) {
+  pendingAddrFor = from;
+  addrEditIndex  = index;
+  const addr = index !== null ? clientProfile.addresses[index] : null;
+  document.getElementById('addr-form-title').textContent = addr ? 'Editar dirección' : 'Nueva dirección';
+  const f = s => document.getElementById(s).value = addr?.[s.replace('af-','')]||'';
+  ['af-nombre','af-apellidos','af-tel','af-calle','af-cp','af-ciudad','af-prov'].forEach(id => {
+    const key = id.replace('af-','');
+    const map = {'tel':'telefono','prov':'provincia'};
+    document.getElementById(id).value = addr?.[map[key]||key] || '';
+  });
+  document.getElementById('err-addr').textContent = '';
+  showView('addr-form');
+}
+
+async function saveAddress() {
+  const addr = {
+    nombre:    document.getElementById('af-nombre').value.trim(),
+    apellidos: document.getElementById('af-apellidos').value.trim(),
+    telefono:  document.getElementById('af-tel').value.trim(),
+    calle:     document.getElementById('af-calle').value.trim(),
+    cp:        document.getElementById('af-cp').value.trim(),
+    ciudad:    document.getElementById('af-ciudad').value.trim(),
+    provincia: document.getElementById('af-prov').value.trim()
+  };
+  const req = ['nombre','calle','cp','ciudad','telefono'];
+  if (req.some(k => !addr[k])) { document.getElementById('err-addr').textContent = 'Rellena los campos obligatorios'; return; }
+
+  if (!clientProfile.addresses) clientProfile.addresses = [];
+  if (addrEditIndex !== null) clientProfile.addresses[addrEditIndex] = addr;
+  else clientProfile.addresses.push(addr);
+
+  await saveClientProfile();
+  toast('Dirección guardada', 'ok');
+  backFromAddrForm();
+}
+
+function backFromAddrForm() {
+  if (pendingAddrFor === 'order') { renderOrderAddressArea(); showView('order'); }
+  else { renderProfileAddresses(); showView('profile'); }
+}
+
+// ═══════════════════════════════════════════════
+// SUBMIT ORDER
+// ═══════════════════════════════════════════════
+async function submitOrder() {
+  const addrs = clientProfile?.addresses || [];
+  if (addrs.length === 0) { toast('Añade una dirección de entrega primero', 'err'); return; }
+  const addr = addrs[0];
+  const p    = products[currentOrder.productId];
+  const nota = document.getElementById('order-note').value.trim();
+  const total = (p.price * orderQty).toFixed(2);
+
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Procesando...';
+
+  const orderData = {
+    uid:            currentUser.uid,
+    clienteEmail:   currentUser.email,
+    clienteNombre:  `${addr.nombre} ${addr.apellidos}`,
+    clienteTel:     addr.telefono,
+    direccion:      `${addr.calle}, ${addr.cp} ${addr.ciudad}, ${addr.provincia}`,
+    producto:       p.name,
+    productId:      p.id,
+    precio:         p.price,
+    cantidad:       orderQty,
+    total:          parseFloat(total),
+    nota:           nota || '',
+    estado:         'pendiente',
+    createdAt:      fbReady ? window._fs.serverTimestamp() : new Date().toISOString()
+  };
+
+  if (fbReady) {
+    try {
+      const { addDoc, collection, doc, updateDoc } = window._fs;
+      await addDoc(collection(window._db, 'orders'), orderData);
+      const newStock = Math.max(0, p.stock - orderQty);
+      await updateDoc(doc(window._db, 'products', p.id), { stock: newStock });
+      products[p.id].stock = newStock;
+    } catch(e) { console.error('Order save:', e); }
+  }
+
+  // Emails — notificación al admin + confirmación al cliente
+  const emailData = {
+    cliente_nombre: `${addr.nombre} ${addr.apellidos}`,
+    cliente_email:  currentUser.email,
+    cliente_tel:    addr.telefono,
+    producto:       p.name,
+    cantidad:       orderQty,
+    total:          total + ' €',
+    direccion:      `${addr.calle}, ${addr.cp} ${addr.ciudad}`,
+    nota:           nota || 'Sin nota'
+  };
+  const ejsCfg = window.CP_CONFIG.emailjs;
+  try {
+    await emailjs.send(ejsCfg.serviceId, 'template_zxzyx6g', emailData);
+  } catch(e) { console.log('Email admin error:', e); }
+  try {
+    await emailjs.send(ejsCfg.serviceId, 'template_y8gsvyr', emailData);
+  } catch(e) { console.log('Email cliente error:', e); }
+
+  btn.disabled = false; btn.textContent = 'Confirmar reserva';
+  document.getElementById('success-msg').textContent =
+    `${orderQty} bote${orderQty>1?'s':''} de ${p.name} reservado${orderQty>1?'s':''}. Te avisamos al ${addr.telefono} para coordinar la entrega.`;
+
+  showView('success');
+  renderProducts();
+}
+
+// ═══════════════════════════════════════════════
+// PROFILE VIEW
+// ═══════════════════════════════════════════════
+function renderProfileView() {
+  const u = currentUser;
+  document.getElementById('profile-grid').innerHTML = `
+    <div class="profile-section">
+      <h3>Cuenta</h3>
+      <p style="font-size:15px;color:var(--muted)">Nombre<br><span style="color:var(--text)">${u.displayName||'—'}</span></p>
+      <p style="font-size:15px;color:var(--muted);margin-top:.5rem">Email<br><span style="color:var(--text)">${u.email}</span></p>
+    </div>
+    <div class="profile-section">
+      <h3>Seguridad</h3>
+      <p style="font-size:14px;color:var(--muted);line-height:1.55">Tus datos de dirección y pedidos están cifrados y solo accesibles para ti.</p>
+      <button class="btn-outline" style="margin-top:.75rem;width:100%" onclick="doLogout()">Cerrar sesión</button>
+    </div>`;
+  renderProfileAddresses();
+}
+
+function renderProfileAddresses() {
+  const addrs = clientProfile?.addresses || [];
+  const cont = document.getElementById('profile-addresses');
+  if (addrs.length === 0) {
+    cont.innerHTML = '<p style="color:var(--muted);font-style:italic;font-size:15px">No tienes direcciones guardadas.</p>';
+    return;
+  }
+  cont.innerHTML = addrs.map((a, i) => `
+    <div class="address-card">
+      <div class="address-name">${a.nombre} ${a.apellidos}</div>
+      <div class="address-lines">${a.calle}<br>${a.cp} ${a.ciudad}, ${a.provincia}<br>📞 ${a.telefono}</div>
+      <button class="address-edit-btn" onclick="openAddrForm(${i},'profile')">Editar</button>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// MY ORDERS
+// ═══════════════════════════════════════════════
+async function loadMyOrders() {
+  if (!currentUser || !fbReady) return;
+  const { collection, query, where, getDocs, orderBy } = window._fs;
+  // Import where dynamically
+  const { where: wh } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+  const cont = document.getElementById('my-orders-body');
+  try {
+    const q = query(collection(window._db,'orders'), wh('uid','==',currentUser.uid));
+    const snap = await getDocs(q);
+    if (snap.empty) { cont.innerHTML = '<p style="color:var(--muted);font-style:italic">Aún no has hecho ningún pedido.</p>'; return; }
+    let rows = '';
+    snap.forEach(d => {
+      const o = d.data();
+      const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('es-ES') : '—';
+      rows += `<tr><td>${date}</td><td>${o.producto}</td><td style="text-align:center">${o.cantidad}</td><td>${Number(o.total).toFixed(2)} €</td><td><span class="status-pill s-${o.estado}">${o.estado}</span></td></tr>`;
+    });
+    cont.innerHTML = `<table class="orders-table"><thead><tr><th>Fecha</th><th>Producto</th><th>Cant.</th><th>Total</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table>`;
+  } catch(e) { cont.innerHTML = '<p style="color:var(--danger-c)">Error al cargar pedidos.</p>'; }
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN ORDERS
+// ═══════════════════════════════════════════════
+async function loadAdminOrders() {
+  if (!isAdmin || !fbReady) return;
+  const { collection, getDocs, query, orderBy } = window._fs;
+  const cont = document.getElementById('admin-orders-body');
+  try {
+    const snap = await getDocs(query(collection(window._db,'orders'), orderBy('createdAt','desc')));
+    if (snap.empty) { cont.innerHTML = '<p style="color:var(--muted);font-style:italic">Sin pedidos aún.</p>'; return; }
+    let rows = '';
+    snap.forEach(d => {
+      const o = d.data();
+      const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('es-ES') : '—';
+      rows += `<tr>
+        <td>${date}</td>
+        <td><strong>${o.clienteNombre}</strong><br><span style="color:var(--muted);font-size:13px">${o.clienteEmail}</span></td>
+        <td>${o.producto}</td>
+        <td style="text-align:center">${o.cantidad}</td>
+        <td>${Number(o.total).toFixed(2)} €</td>
+        <td style="font-size:13px;color:var(--muted)">${o.direccion}</td>
+        <td><span class="status-pill s-${o.estado}">${o.estado}</span></td>
+        <td><button class="btn-sm" onclick="markSent('${d.id}',this)">Enviado</button></td>
+      </tr>`;
+    });
+    cont.innerHTML = `<div style="overflow-x:auto"><table class="orders-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cant.</th><th>Total</th><th>Dirección</th><th>Estado</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  } catch(e) { cont.innerHTML = '<p style="color:var(--danger-c)">Error.</p>'; }
+}
+
+async function markSent(orderId, btn) {
+  const { doc, updateDoc } = window._fs;
+  await updateDoc(doc(window._db,'orders',orderId), { estado: 'enviado' });
+  btn.closest('tr').querySelector('.status-pill').className = 'status-pill s-enviado';
+  btn.closest('tr').querySelector('.status-pill').textContent = 'enviado';
+  btn.disabled = true;
+  toast('Marcado como enviado', 'ok');
+}
+
+// ═══════════════════════════════════════════════
+// VIEW ROUTER
+// ═══════════════════════════════════════════════
+function showView(name) {
+  // Guard order view — require auth
+  if (name === 'order' && !currentUser) { showView('auth'); return; }
+  // Guard profile / my-orders — require auth
+  if ((name === 'profile' || name === 'my-orders') && !currentUser) { showView('auth'); return; }
+  // Guard admin-orders
+  if (name === 'admin-orders' && !isAdmin) return;
+
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + name);
+  if (el) { el.classList.add('active'); window.scrollTo(0,0); }
+
+  // After-show hooks
+  if (name === 'profile') renderProfileView();
+  if (name === 'my-orders') loadMyOrders();
+  if (name === 'auth') { authMode = 'login'; document.getElementById('auth-name-row').style.display='none'; document.getElementById('btn-do-auth').textContent='Entrar →'; document.getElementById('auth-toggle-btn').textContent='¿Primera vez? Crear cuenta'; document.getElementById('err-auth').textContent=''; }
+  if (name === 'shop' && pendingOrderPid && currentUser) {
+    const pid = pendingOrderPid; pendingOrderPid = null;
+    startOrder(pid);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.className = 'toast'; }, 3200);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+if (!window.CP_CONFIG.firebase.apiKey.startsWith('PEGA')) {
+  // Firebase configured — wait for fbReady event
+} else {
+  // Demo mode: load products from memory
+  products = {
+    clara:  { id:'clara',  name:'Miel Clara',  desc:'Floral y delicada, de flores silvestres de primavera. Textura suave y aroma sutil.',          price:12, stock:20, active:true, emoji:'🍯', imageUrl:'' },
+    oscura: { id:'oscura', name:'Miel Oscura', desc:'Intensa y aromática, de monte bajo y tomillo. Sabor robusto con notas balsámicas.', price:14, stock:5,  active:true, emoji:'🫙', imageUrl:'' }
+  };
+  renderProducts();
+}
+
+// Close modal on background click
+document.getElementById('modal-bg').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-bg')) closeModal();
+});
+</script>
+</body>
+</html>
